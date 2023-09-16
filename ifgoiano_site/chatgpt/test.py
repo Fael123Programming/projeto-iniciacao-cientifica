@@ -1,6 +1,9 @@
 import openai, decouple
+# import openai
 
-KEY = decouple.config('API_KEY')
+openai.api_key = decouple.config('TEST_KEY')
+# openai.api_key = 'chave'
+# KEY = decouple.config('API_KEY')
 
 
 def ask(*questions) -> str:
@@ -13,7 +16,7 @@ def ask(*questions) -> str:
             }
         )
     response = openai.ChatCompletion.create(
-        api_key=KEY,
+        # api_key=KEY,
         model='gpt-3.5-turbo',
         messages=msgs
     )
@@ -21,5 +24,5 @@ def ask(*questions) -> str:
 
 
 if __name__ == '__main__':
-    print(ask("Gambira is an unofficial kind of trending or exchange in Brazil, such that does not demand any written document or paper", "Based on context, what is a gambira in Brazil?"))
+    print(ask("Who is Lula?"))
     

@@ -1,10 +1,8 @@
-import openai, pandas, os, time
-from decouple import config
-
+import pandas, os, time
 
 # Generate class, uncomment the following variables.
-SOURCE_PATH = 'C:\\Users\\Rafae\\OneDrive\\Documentos\\projeto_iniciacao_cientifica\\ifgoiano_site\\datasets\\clean'
-TARGET_PATH = 'C:\\Users\\Rafae\\OneDrive\\Documentos\\projeto_iniciacao_cientifica\\ifgoiano_site\\datasets\\class'
+SOURCE_PATH = 'C:/Users/Rafae/OneDrive/Documentos/projeto_iniciacao_cientifica/ifgoiano_site/datasets/clean'
+TARGET_PATH = 'C:/Users/Rafae/OneDrive/Documentos/projeto_iniciacao_cientifica/ifgoiano_site/datasets/class'
 
 # Generate inter_class, uncomment the following variables.
 # SOURCE_PATH = 'C:\\Users\\Rafae\\OneDrive\\Documentos\\projeto_iniciacao_cientifica\\ifgoiano_site\\datasets\\inter'
@@ -36,49 +34,27 @@ DICIO_REJANE = {
 
 DICIO = DICIO_REJANE
 
-def get_messages(title, description) -> list:
-    messages = list()
-    for key, value in DICIO.items():
-        local_dict = dict()
-        local_dict['role'] = 'user'
-        if key == 'QUESTION_PATTERN':
-            value = value.format(title, description)
-        local_dict['content'] = value
-        messages.append(local_dict)
-    return messages
-
-
 if __name__ == '__main__':
-    key = config('API_KEY_JESMMER')
     files = os.listdir(SOURCE_PATH)
-    counter = 1
-    for f in files[len(files) - 1:]:
-        csv = pandas.read_csv(os.path.join(SOURCE_PATH, f))
-        csv = csv.reset_index()
-        csv['subject'] = '-'
-        print('-' * 100)
-        for i in range(csv.shape[0]):
-            while True:
-                try:
-                    title, description = csv.iloc[i][['titulo', 'descricao']]
-                    response = openai.ChatCompletion.create(
-                        api_key=key,
-                        model='gpt-3.5-turbo',
-                        messages=get_messages(title, description)
-                    )
-                    answer = response['choices'][0]['message']['content'].replace('.', '')
-                    csv.loc[i, 'subject'] = answer
-                    print(f'({counter})')
-                    print(f'Title: {title}')
-                    print(f'Description: {description}')
-                    print(f'Subject: {answer.upper()}')
-                    print('-' * 100)
-                    if counter % 3000 == 0:
-                        time.sleep(60)
-                    counter += 1
-                except (openai.error.ServiceUnavailableError, Exception) as e:
-                    print(f'\'{e.__class__.__name__}\' caught with message \'{e}\'')
-                    time.sleep(60)
-                else:
+    for f in files:
+        with open('gpt_file_' + f.split('.csv')[0] + '.txt', 'a', encoding='utf-8') as gpt_file:
+            csv = pandas.read_csv(os.path.join(SOURCE_PATH, f))
+            csv = csv.reset_index()
+            gpt_file.write('Based on the following subjects and their descriptions, write Python code with a list contained with one subject (only the subject, not its description) that fits better for each numbered text below:\n')
+            for subj, desc in DICIO.items():
+                gpt_file.write(f'{subj}: {desc}\n')
+            gpt_file.write('\n')
+            for i in range(csv.shape[0]):
+                title, description = csv.iloc[i][['titulo', 'descricao']]
+                gpt_file.write(f'{i + 1} - {title}: {description}\n')
+                if i == 99:
                     break
-        csv.to_csv(os.path.join(TARGET_PATH, f), encoding='utf-8', index=False)
+        break    
+            # answer = get_subject(title, description)
+            # csv.loc[i, 'subject'] = answer
+            # print(f'({i + 1})')
+            # print(f'Title: {title}')
+            # print(f'Description: {description}')
+            # print(f'Subject: {answer.upper()}')
+            # print('-' * 100)
+        # csv.to_csv(os.path.join(TARGET_PATH, f), encoding='utf-8', index=False)
